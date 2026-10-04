@@ -27,7 +27,7 @@
 				min-height: 100vh;
 				min-height: 100svh;
 				margin: 0;
-				overflow: hidden;
+				overflow-x: hidden;
 				background: var(--page-background);
 				color: var(--page-foreground);
 				font-family: Arial, Helvetica, sans-serif;
@@ -184,23 +184,59 @@
 				95% { clip-path: inset(0 0 100%); transform: translateX(0); }
 			}
 
-			.details {
-				display: flex;
-				justify-content: center;
-				gap: 0.55rem 1.1rem;
-				flex-wrap: wrap;
-				margin: 1.3rem 0 2.4rem;
+			.intro {
+				max-width: 38rem;
+				margin: 1rem auto 0;
 				color: var(--page-muted);
-				font-size: 0.9rem;
+				font-size: clamp(0.9rem, 2vw, 1.05rem);
+				line-height: 1.55;
 			}
 
-			.details a { color: inherit; text-decoration-color: var(--magenta); text-underline-offset: 3px; }
+			.skills {
+				display: flex;
+				flex-direction: column;
+				gap: 0.55rem;
+				width: min(100%, 46rem);
+				margin: 1.2rem auto 0;
+			}
+
+			.skill-group {
+				display: flex;
+				align-items: center;
+				flex-wrap: wrap;
+				justify-content: center;
+				gap: 0.35rem 0.45rem;
+				margin: 0;
+				padding: 0;
+				list-style: none;
+			}
+
+			.skill-label {
+				margin: 0 0.2rem 0 0;
+				color: var(--page-muted);
+				font-size: 0.6rem;
+				font-weight: 800;
+				letter-spacing: 0.12em;
+				text-transform: uppercase;
+			}
+
+			.skill-tag {
+				padding: 0.25rem 0.58rem;
+				border: 1px solid var(--page-line);
+				border-radius: 999px;
+				color: var(--page-foreground);
+				font-size: 0.67rem;
+				font-weight: 700;
+				line-height: 1.25;
+				white-space: nowrap;
+			}
 
 			.links {
 				display: flex;
 				justify-content: center;
 				gap: clamp(1.1rem, 5vw, 3.5rem);
 				flex-wrap: wrap;
+				margin-top: 2rem;
 			}
 
 			.link-item {
@@ -230,12 +266,20 @@
 				transition: border-color 160ms ease, color 160ms ease, transform 160ms ease;
 			}
 
+			.links a.contact-link {
+				padding: 0.35rem 0.8rem;
+				border: 1px solid var(--magenta);
+				border-radius: 999px;
+				background: rgb(255 53 189 / 8%);
+				color: var(--page-foreground);
+			}
+
 			.links a:hover, .links a:focus-visible {
 				transform: translateY(-2px);
 				border-color: var(--magenta);
 				color: var(--page-foreground);
 			}
-			.links a:focus-visible, .details a:focus-visible, .cord:focus-visible { outline: 3px solid var(--cyan); outline-offset: 4px; }
+			.links a:focus-visible, .cord:focus-visible { outline: 3px solid var(--cyan); outline-offset: 4px; }
 
 			.cord {
 				position: fixed;
@@ -280,39 +324,28 @@
 
 			.cord:hover .cord-handle { transform: translateY(5px); }
 
-			.cord-label {
-				position: absolute;
-				top: 8.1rem;
-				left: 50%;
-				width: max-content;
-				color: var(--page-muted);
-				font-size: 0.57rem;
-				font-weight: 900;
-				letter-spacing: 0.1em;
-				text-transform: uppercase;
-				transform: translateX(-50%);
-			}
-
 			@media (max-width: 520px) {
 				main { padding: 4.5rem 1rem 1.25rem; }
 				h1 { font-size: clamp(3.45rem, 16vw, 5.5rem); }
 				.role { font-size: clamp(0.54rem, 2.35vw, 0.78rem); }
-				.links { gap: 1.3rem; }
+				.skills { gap: 0.45rem; margin-top: 0.95rem; }
+				.skill-group { gap: 0.3rem 0.4rem; }
+				.skill-tag { padding: 0.22rem 0.5rem; font-size: 0.63rem; }
+				.links { gap: 1.3rem; margin-top: 1.5rem; }
 				.links a { font-size: 0.7rem; letter-spacing: 0.09em; }
-				.details { margin-bottom: 1.8rem; font-size: 0.8rem; }
 				.cord { right: 1.25rem; min-height: 7.5rem; }
 				.cord::before { height: 5.5rem; }
-				.cord-label { top: 7.1rem; font-size: 0.5rem; }
 			}
 
 			@media (max-height: 560px) {
 				main { padding-top: 3.75rem; padding-bottom: 0.75rem; }
 				h1 { font-size: clamp(3rem, 16vh, 7rem); }
 				.role { margin-top: 0.85rem; }
-				.details { margin: 0.55rem 0 1rem; }
+				.skills { gap: 0.3rem; margin-top: 0.7rem; }
+				.skill-tag { padding-block: 0.16rem; }
+				.links { margin-top: 0.85rem; }
 				.cord { min-height: 6rem; }
 				.cord::before { height: 4rem; }
-				.cord-label { top: 5.6rem; }
 			}
 
 			@media (prefers-reduced-motion: reduce) {
@@ -327,47 +360,65 @@
 	<body>
 		<button class="cord" id="light-switch" type="button" aria-label="Turn the lights on" aria-pressed="false">
 			<span class="cord-handle" aria-hidden="true"></span>
-			<span class="cord-label" id="cord-label">Pull for light</span>
 		</button>
 
 		<main>
 			<section class="identity" aria-labelledby="name">
-				<p class="eyebrow">Hello! i am</p>
+				<p class="eyebrow">Hello, I am</p>
 				<h1 id="name"><span class="name-line" data-text="Mattia">Mattia</span><span class="name-line" data-text="Larentis">Larentis</span></h1>
 				<p class="role" data-text="Senior Full Stack Developer + Solution Architect">Senior Full Stack Developer + Solution Architect</p>
-				<div class="details">
-					<span>Trento, Italy</span>
-					<a href="mailto:mattia@larentis.eu">mattia@larentis.eu</a>
-				</div>
-			<nav class="links" aria-label="Find me online">
-				<div class="link-item">
-					<span class="link-prefix">Coder @</span>
-					<a href="https://github.com/nostalgiaz/" target="_blank" rel="noopener noreferrer">GitHub</a>
-				</div>
-				<div class="link-item">
-					<span class="link-prefix">Connect @</span>
-					<a href="https://www.linkedin.com/in/mattialarentis" target="_blank" rel="noopener noreferrer">LinkedIn</a>
-				</div>
-				<div class="link-item">
-					<span class="link-prefix">Reviewer @</span>
-					<a href="https://dudexpress.it/writers/tia/" target="_blank" rel="noopener noreferrer">Dudexpress</a>
-				</div>
-				<div class="link-item">
-					<span class="link-prefix">Volunteer @</span>
-					<a href="https://ludimus.it/" target="_blank" rel="noopener noreferrer">Ludimus</a>
-				</div>
-			</nav>
+				<p class="intro">Based in Italy, I build digital products from architecture to production.</p>
+				<section class="skills" aria-label="Technology and areas of expertise">
+					<ul class="skill-group engineering" aria-label="Engineering">
+						<li class="skill-label">Engineering</li>
+						<li class="skill-tag">TypeScript</li>
+						<li class="skill-tag">React</li>
+						<li class="skill-tag">Next.js</li>
+						<li class="skill-tag">Turborepo</li>
+					</ul>
+					<ul class="skill-group architecture" aria-label="Architecture">
+						<li class="skill-label">Architecture</li>
+						<li class="skill-tag">Microfrontends</li>
+						<li class="skill-tag">Microservices</li>
+					</ul>
+					<ul class="skill-group applied-ai" aria-label="Applied AI">
+						<li class="skill-label">Applied AI</li>
+						<li class="skill-tag">LangChain</li>
+						<li class="skill-tag">LangGraph</li>
+						<li class="skill-tag">MCP</li>
+					</ul>
+				</section>
+				<nav class="links" aria-label="Get in touch and find me online">
+					<div class="link-item">
+						<span class="link-prefix">Say hello</span>
+						<a class="contact-link" href="mailto:mattia@larentis.eu">Get in touch</a>
+					</div>
+					<div class="link-item">
+						<span class="link-prefix">Professional profile</span>
+						<a href="https://www.linkedin.com/in/mattialarentis" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+					</div>
+					<div class="link-item">
+						<span class="link-prefix">Personal projects</span>
+						<a href="https://github.com/nostalgiaz/" target="_blank" rel="noopener noreferrer">GitHub</a>
+					</div>
+					<div class="link-item">
+						<span class="link-prefix">Reviewer @</span>
+						<a href="https://dudexpress.it/writers/tia/" target="_blank" rel="noopener noreferrer">Dudexpress</a>
+					</div>
+					<div class="link-item">
+						<span class="link-prefix">Volunteer @</span>
+						<a href="https://ludimus.it/" target="_blank" rel="noopener noreferrer">Ludimus</a>
+					</div>
+				</nav>
 			</section>
 		</main>
 		<script>
 			const lightSwitch = document.getElementById("light-switch")
-			const cordLabel = document.getElementById("cord-label")
 
 			lightSwitch.addEventListener("click", () => {
 				const lightsOn = document.body.classList.toggle("lights-on")
 				lightSwitch.setAttribute("aria-pressed", String(lightsOn))
 				lightSwitch.setAttribute("aria-label", lightsOn ? "Turn the lights off" : "Turn the lights on")
-				cordLabel.textContent = lightsOn ? "Pull for dark" : "Pull for light"
 			})
 		</script>
 	</body>
