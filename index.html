@@ -286,43 +286,53 @@
 				z-index: 2;
 				top: 0;
 				right: clamp(1.5rem, 8vw, 7rem);
-				display: flex;
-				width: 3.5rem;
-				min-height: 8.5rem;
-				align-items: flex-end;
-				justify-content: center;
-				padding: 0 0 0.7rem;
-				border: 0;
-				background: transparent;
-				color: var(--page-foreground);
-				cursor: pointer;
+				width: 11.25rem;
+				height: 15rem;
+				--pull-x: 0px;
+				--pull-y: 0px;
+				pointer-events: none;
 			}
 
-			.cord::before {
+			.cord-rope {
 				position: absolute;
-				top: 0;
-				left: 50%;
-				width: 2px;
-				height: 6.3rem;
-				background: linear-gradient(var(--magenta), var(--cyan));
-				content: "";
-				transform: translateX(-50%);
+				inset: 0;
+				width: 100%;
+				height: 100%;
+				overflow: visible;
+				pointer-events: none;
 			}
+
+			.rope-strand {
+				fill: none;
+				stroke-linecap: round;
+				stroke-linejoin: round;
+			}
+
+			.rope-strand { stroke: url(#rope-gradient); stroke-width: 3; }
 
 			.cord-handle {
-				position: relative;
+				position: absolute;
+				z-index: 1;
+				top: 6.375rem;
+				left: 50%;
 				display: grid;
-				width: 1.15rem;
-				height: 1.7rem;
+				width: 2rem;
+				height: 2.5rem;
 				place-items: center;
+				padding: 0;
 				border: 2px solid var(--page-background);
 				border-radius: 999px;
 				background: var(--magenta);
 				box-shadow: 0 0 0 2px var(--cyan), 0 0 18px var(--magenta);
-				transition: transform 180ms ease;
+				color: var(--page-foreground);
+				cursor: grab;
+				pointer-events: auto;
+				touch-action: none;
+				transform: translate(calc(-50% + var(--pull-x)), calc(-50% + var(--pull-y)));
 			}
 
-			.cord:hover .cord-handle { transform: translateY(5px); }
+			.cord-handle:active, .cord.is-dragging .cord-handle { cursor: grabbing; }
+			.cord-handle:focus-visible { outline: 3px solid var(--cyan); outline-offset: 7px; }
 
 			@media (max-width: 520px) {
 				main { padding: 4.5rem 1rem 1.25rem; }
@@ -333,8 +343,7 @@
 				.skill-tag { padding: 0.22rem 0.5rem; font-size: 0.63rem; }
 				.links { gap: 1.3rem; margin-top: 1.5rem; }
 				.links a { font-size: 0.7rem; letter-spacing: 0.09em; }
-				.cord { right: 1.25rem; min-height: 7.5rem; }
-				.cord::before { height: 5.5rem; }
+				.cord { right: 1.25rem; }
 			}
 
 			@media (max-height: 560px) {
@@ -344,8 +353,6 @@
 				.skills { gap: 0.3rem; margin-top: 0.7rem; }
 				.skill-tag { padding-block: 0.16rem; }
 				.links { margin-top: 0.85rem; }
-				.cord { min-height: 6rem; }
-				.cord::before { height: 4rem; }
 			}
 
 			@media (prefers-reduced-motion: reduce) {
@@ -358,9 +365,18 @@
 		</style>
 	</head>
 	<body>
-		<button class="cord" id="light-switch" type="button" aria-label="Turn the lights on" aria-pressed="false">
-			<span class="cord-handle" aria-hidden="true"></span>
-		</button>
+		<div class="cord" id="light-switch-cord">
+			<svg class="cord-rope" viewBox="0 0 180 240" aria-hidden="true">
+				<defs>
+					<linearGradient id="rope-gradient" gradientUnits="userSpaceOnUse" x1="90" y1="0" x2="90" y2="102">
+						<stop offset="0%" stop-color="#ff35bd" />
+						<stop offset="100%" stop-color="#36f5ed" />
+					</linearGradient>
+				</defs>
+				<path class="rope-strand" d="M 90 0 Q 90 45 90 102" />
+			</svg>
+			<button class="cord-handle" id="light-switch" type="button" aria-label="Turn the lights on" aria-pressed="false"></button>
+		</div>
 
 		<main>
 			<section class="identity" aria-labelledby="name">
@@ -413,12 +429,95 @@
 			</section>
 		</main>
 		<script>
+			const cord = document.getElementById("light-switch-cord")
 			const lightSwitch = document.getElementById("light-switch")
+			const rope = cord.querySelector(".rope-strand")
+			const maxPull = 90
+			const restPoint = { x: 90, y: 102 }
+			let pull = { x: 0, y: 0 }
+			let drag = null
+			let returnFrame = 0
 
-			lightSwitch.addEventListener("click", () => {
+			function updateRope() {
+				const endX = restPoint.x + pull.x
+				const endY = restPoint.y + pull.y
+				const controlX = restPoint.x + pull.x * 0.35
+				const controlY = restPoint.y * 0.45 + pull.y * 0.35
+				const path = `M ${restPoint.x} 0 Q ${controlX} ${controlY} ${endX} ${endY}`
+				rope.setAttribute("d", path)
+				cord.style.setProperty("--pull-x", `${pull.x}px`)
+				cord.style.setProperty("--pull-y", `${pull.y}px`)
+			}
+
+			function switchTheme() {
 				const lightsOn = document.body.classList.toggle("lights-on")
 				lightSwitch.setAttribute("aria-pressed", String(lightsOn))
 				lightSwitch.setAttribute("aria-label", lightsOn ? "Turn the lights off" : "Turn the lights on")
+			}
+
+			function returnCord() {
+				cancelAnimationFrame(returnFrame)
+				if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+					pull = { x: 0, y: 0 }
+					updateRope()
+					return
+				}
+				const start = performance.now()
+				const from = { ...pull }
+				const duration = 320
+				function animate(now) {
+					const progress = Math.min((now - start) / duration, 1)
+					const eased = 1 - (1 - progress) ** 3
+					pull = { x: from.x * (1 - eased), y: from.y * (1 - eased) }
+					updateRope()
+					if (progress < 1) returnFrame = requestAnimationFrame(animate)
+				}
+				returnFrame = requestAnimationFrame(animate)
+			}
+
+			function finishDrag(shouldSwitchTheme) {
+				if (!drag) return
+				drag = null
+				cord.classList.remove("is-dragging")
+				if (shouldSwitchTheme) switchTheme()
+				returnCord()
+			}
+
+			lightSwitch.addEventListener("pointerdown", (event) => {
+				if (event.button !== 0) return
+				event.preventDefault()
+				cancelAnimationFrame(returnFrame)
+				cord.classList.add("is-dragging")
+				lightSwitch.setPointerCapture(event.pointerId)
+				drag = { id: event.pointerId, x: event.clientX, y: event.clientY, startPull: { ...pull } }
+			})
+
+			window.addEventListener("pointermove", (event) => {
+				if (!drag || drag.id !== event.pointerId) return
+				let x = drag.startPull.x + event.clientX - drag.x
+				let y = drag.startPull.y + event.clientY - drag.y
+				const distance = Math.hypot(x, y)
+				if (distance > maxPull) {
+					const scale = maxPull / distance
+					x *= scale
+					y *= scale
+				}
+				pull = { x, y }
+				updateRope()
+			})
+
+			window.addEventListener("pointerup", (event) => {
+				if (!drag || drag.id !== event.pointerId) return
+				finishDrag(true)
+			})
+
+			window.addEventListener("pointercancel", (event) => {
+				if (!drag || drag.id !== event.pointerId) return
+				finishDrag(false)
+			})
+
+			lightSwitch.addEventListener("click", (event) => {
+				if (event.detail === 0) switchTheme()
 			})
 		</script>
 	</body>
